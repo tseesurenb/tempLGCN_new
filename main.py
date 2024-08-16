@@ -286,6 +286,6 @@ for epoch in tqdm(range(EPOCHS), position=1, mininterval=1.0, ncols=100):
 
 
 tqdm.write(f"\nModel: {br}{MODEL}{rs} | DATASET: {br}{DATASET}{rs} | Layers: {br}{NUM_LAYERS}{rs} | DECAY: {br}{DECAY}{rs}")
-tqdm.write(f"Temp: {br}{A_METHOD}{rs} - {br}{A_BETA}{rs} | {br}{R_METHOD}{rs} - {br}{R_BETA}{rs}")
-tqdm.write(f"RMSE: {br}{min_RMSE_loss} at epoch {min_RMSE_epoch}{rs} with Recall, Precision: {br}{min_RECALL_f, min_PRECISION_f}{rs} | NCDG: {br}{min_ncdg}{rs}")
+tqdm.write(f" Temp: {br}{A_METHOD}{rs} - {br}{A_BETA}{rs} | {br}{R_METHOD}{rs} - {br}{R_BETA}{rs}")
+tqdm.write(f" RMSE: {br}{min_RMSE_loss} at epoch {min_RMSE_epoch}{rs} with Recall, Precision: {br}{min_RECALL_f, min_PRECISION_f}{rs} | NCDG: {br}{min_ncdg}{rs}")
 #plot_loss(val_epochs, train_losses, val_losses, train_rmse, val_rmse, val_recall, val_prec)
