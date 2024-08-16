@@ -342,10 +342,6 @@ def add_abs_decay(rating_df, beta = 0.05, method = 'log', verbose = 0):
     
     _max_distance = _end - _start 
     
-    if verbose == 0:
-        print(f'Time time distance between max and min:{_max_distance}')
-        print(f'The a_beta in absolute drift:{_beta}')
-    
     if method == 'lin':
         rating_df['abs_decay'] = ((rating_df['timestamp'] - _start) / _max_distance)
     elif method == 'log':
@@ -357,7 +353,7 @@ def add_abs_decay(rating_df, beta = 0.05, method = 'log', verbose = 0):
     elif method == 'sigmoid':
         rating_df['abs_decay'] = sigmoid(_base + (rating_df['timestamp'] - _start) / _win_unit)
     
-    if verbose > -1:            
+    if verbose == 1:            
         print(f'The absolute decay method is {method} with param: {beta}')
     
     return rating_df
@@ -375,9 +371,7 @@ def add_u_rel_decay(rating_df, beta = 25, win_size = 1, method = 'exp', verbose 
     _base = 0.0000000001
     _win_unit = 24 * 3600 * win_size
     
-    if verbose > -1:
-        print(f'The r_beta in user relative drift:{_beta}, win:{_win_unit}')
-        
+    
     # Step 1: Convert timestamp to int64
     rating_df["timestamp"] = rating_df["timestamp"].astype("int64")
 
@@ -433,7 +427,6 @@ def add_u_rel_decay(rating_df, beta = 25, win_size = 1, method = 'exp', verbose 
         # Show the plot
         plt.show()
     
-    if verbose > -1:
         print(f'The relative decay method is {method} with param: {beta}')
     
     return rating_df
@@ -443,9 +436,6 @@ def add_i_rel_decay(rating_df, beta = 25, win_size = 1, method = 'exp', verbose 
     _beta = beta
     _base = 0.0000000001
     _win_unit = 24 * 3600 * win_size
-    
-    if verbose > -1:
-        print(f'The r_beta in item relative drift:{_beta}, win:{_win_unit}')
         
     # Step 1: Convert timestamp to int64
     rating_df["timestamp"] = rating_df["timestamp"].astype("int64")
@@ -499,8 +489,7 @@ def add_i_rel_decay(rating_df, beta = 25, win_size = 1, method = 'exp', verbose 
         plt.title('Sorted Plot of u_rel_decay')
         # Show the plot
         plt.show()
-    
-    if verbose > -1:
+
         print(f'The relative decay method is {method} with param: {beta}')
     
     return rating_df
@@ -552,29 +541,29 @@ def get_rmat_values(rating_df, rating_threshold = 0, verbose = 0):
     
     if "abs_decay" in rating_df.columns:
         _abs_decay = rating_df["abs_decay"].values
-        if verbose == 0:
+        if verbose == 1:
             print('The abs_decay exists.')
     else:
         _abs_decay = rating_df["timestamp"].values
-        if verbose == 0:
+        if verbose == 1:
             print('The abs_decay does not exists.')
     
     if "u_rel_decay" in rating_df.columns:
         _u_rel_decay = rating_df["u_rel_decay"].values
-        if verbose == 0:
+        if verbose == 1:
             print('The u_rel_decay exists.')
     else:
         _u_rel_decay = rating_df["timestamp"].values
-        if verbose == 0:
+        if verbose == 1:
             print('The u_rel_decay does not exists.')
             
     if "i_rel_decay" in rating_df.columns:
         _i_rel_decay = rating_df["i_rel_decay"].values
-        if verbose == 0:
+        if verbose == 1:
             print('The i_rel_decay exists.')
     else:
         _i_rel_decay = rating_df["timestamp"].values
-        if verbose == 0:
+        if verbose == 1:
             print('The i_rel_decay does not exists.')
     
     _true_edges = torch.from_numpy(rating_df["rating"].values).view(-1, 1).to(torch.long) >= rating_threshold
@@ -604,7 +593,7 @@ def get_rmat_values(rating_df, rating_threshold = 0, verbose = 0):
                  'rmat_i_rel_decay': torch.tensor(rmat_i_rel_decay)}
     
     if verbose == 0:
-        print(f"Number of edges: {len(rmat_values)}")
+        #print(f"Number of edges: {len(rmat_values)}")
         print("Done getting rmat values.")
     
     return rmat_data
