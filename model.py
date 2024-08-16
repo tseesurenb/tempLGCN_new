@@ -23,6 +23,7 @@ class LGCN(MessagePassing):
                  add_self_loops = False,
                  mu = 0,
                  drop= 0,
+                 device = 'cpu',
                  verbose = False):
         super().__init__()
         self.num_users = num_users
@@ -35,6 +36,7 @@ class LGCN(MessagePassing):
         self.mu = mu
         self.model = model
         self.dropout = drop
+        self.device = device
         
         print("Model:", model, " | Layers:", num_layers, " | emb dimension:", embedding_dim, " | dropout:", drop)
         
@@ -69,8 +71,8 @@ class LGCN(MessagePassing):
             model = 'lgcn'
             self.mu = 0
         
-        self.users_emb = nn.Embedding(num_embeddings=self.num_users, embedding_dim=self.embedding_dim)
-        self.items_emb = nn.Embedding(num_embeddings=self.num_items, embedding_dim=self.embedding_dim)
+        self.users_emb = nn.Embedding(num_embeddings=self.num_users, embedding_dim=self.embedding_dim).to(self.device)
+        self.items_emb = nn.Embedding(num_embeddings=self.num_items, embedding_dim=self.embedding_dim).to(self.device)
         
         self.users_emb.weight.requires_grad = True
         self.items_emb.weight.requires_grad = True
@@ -79,28 +81,28 @@ class LGCN(MessagePassing):
         nn.init.normal_(self.items_emb.weight, std=0.1)
         
         if self.user_baseline:
-            self._u_base_emb = nn.Embedding(num_embeddings=num_users, embedding_dim=self.embedding_dim)
+            self._u_base_emb = nn.Embedding(num_embeddings=num_users, embedding_dim=self.embedding_dim).to(self.device)
             nn.init.zeros_(self._u_base_emb.weight)
             self._u_base_emb.weight.requires_grad = True
             if self.verbose:
                 print("The user baseline embedding is ON.")
         
         if self.item_baseline:
-            self._i_base_emb = nn.Embedding(num_embeddings=num_items, embedding_dim=self.embedding_dim)
+            self._i_base_emb = nn.Embedding(num_embeddings=num_items, embedding_dim=self.embedding_dim).to(self.device)
             nn.init.zeros_(self._i_base_emb.weight)
             self._i_base_emb.weight.requires_grad = True
             if self.verbose:
                 print("The item baseline embedding is ON.")
 
         if self.u_abs_drift:
-            self._u_abs_drift_emb = nn.Embedding(num_embeddings=num_users, embedding_dim=self.embedding_dim)     
+            self._u_abs_drift_emb = nn.Embedding(num_embeddings=num_users, embedding_dim=self.embedding_dim).to(self.device)  
             nn.init.zeros_(self._u_abs_drift_emb.weight)
             self._u_abs_drift_emb.weight.requires_grad = True
             if self.verbose:
                 print("The absolute user drift temporal embedding is ON.")
 
         if self.u_rel_drift:
-            self._u_rel_drift_emb = nn.Embedding(num_embeddings=num_users, embedding_dim=self.embedding_dim)     
+            self._u_rel_drift_emb = nn.Embedding(num_embeddings=num_users, embedding_dim=self.embedding_dim).to(self.device)   
             nn.init.zeros_(self._u_rel_drift_emb.weight)
             self._u_rel_drift_emb.weight.requires_grad = True
             if self.verbose:

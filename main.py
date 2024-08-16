@@ -112,6 +112,9 @@ val_abs_decay = r_mat_val_abs_decay
 val_u_rel_decay = r_mat_val_u_rel_decay
 val_i_rel_decay = r_mat_val_i_rel_decay
 
+# STEP 12: setting the device
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 # STEP 11: setting the model
 model = LGCN(num_users=NUM_USERS,
                 num_items=NUM_ITEMS,
@@ -120,13 +123,11 @@ model = LGCN(num_users=NUM_USERS,
                 add_self_loops = False,
                 mu = MEAN_RATING,
                 model=MODEL,
+                device=device,
                 verbose=VERBOSE)
 
 
-# STEP 12: setting the device
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-if VERBOSE == 1:
+if VERBOSE > -1:
     print(f"Device is - {device}")
 
 model = model.to(device)
