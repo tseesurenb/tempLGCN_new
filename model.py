@@ -117,14 +117,14 @@ class LGCN(MessagePassing):
         #u_emb_0 = self.users_emb.weight + self._u_abs_drift_emb.weight + self._u_rel_drift_emb.weight + self._u_base_emb.weight
         u_emb_0 = self.users_emb.weight
         
-        #if self.u_abs_drift:
-        #    u_emb_0 = u_emb_0 + self._u_abs_drift_emb.weight
+        if self.u_abs_drift:
+            u_emb_0 = u_emb_0 + self._u_abs_drift_emb.weight
             
-        #if self.u_rel_drift:
-        #    u_emb_0 = u_emb_0 + self._u_rel_drift_emb.weight
+        if self.u_rel_drift:
+            u_emb_0 = u_emb_0 + self._u_rel_drift_emb.weight
         
-        #if self.user_baseline:
-        #    u_emb_0 = u_emb_0 + self._u_base_emb.weight
+        if self.user_baseline:
+            u_emb_0 = u_emb_0 + self._u_base_emb.weight
             
         #u_emb_0 = self.users_emb.weight #+ self._u_abs_drift_emb.weight + self._u_rel_drift_emb.weight
         i_emb_0 = self.items_emb.weight #+ self._i_base_emb.weight
