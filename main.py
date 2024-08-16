@@ -135,7 +135,7 @@ model = model.to(device)
 train_src = train_src.to(device)
 train_dest = train_dest.to(device)
 train_values = train_values.to(device)
-train_abs_t_decay = train_abs_decay.to(device)
+train_abs_decay = train_abs_decay.to(device)
 train_u_rel_decay = train_u_rel_decay.to(device)
 train_i_rel_decay = train_i_rel_decay.to(device)
 
