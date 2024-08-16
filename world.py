@@ -18,6 +18,7 @@ config['dataset'] = args.dataset
 config['num_layers'] = args.layer
 config['emb_dim'] = args.emb_dim
 config['model'] = args.model
+config['option'] = args.option
 config['decay'] = args.decay
 config['epochs'] = args.epochs
 config['top_k'] = args.top_k

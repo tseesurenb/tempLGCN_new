@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 import data_prep as dp
 from world import config
-from model import LGCN_full, LGCN
+from model import LGCN_full, tempLGCN, MCCF
 from utils import get_recall_at_k, minibatch, save_model, calculate_ndcg, plot_loss
 
 # ANSI escape codes for bold and red
@@ -38,10 +38,16 @@ A_METHOD = config['a_method']
 DATASET = config['dataset']
 VERBOSE = config['verbose']
 MODEL = config['model']
+MODEL_OPTION = config['option']
 TEST_SIZE = config['test_size']
 NUM_EXP = config['num_exp']
 MIN_USER_RATINGS = config['min_u_ratings']
 SAVE_MODEL = config['save']
+
+models = {
+    'tempLGCN': tempLGCN,
+    'MCCF': MCCF
+}
 
 if VERBOSE:
     print(f'loading {DATASET} ...')
@@ -116,15 +122,18 @@ val_i_rel_decay = r_mat_val_i_rel_decay
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # STEP 11: setting the model
-model = LGCN(num_users=NUM_USERS,
-                num_items=NUM_ITEMS,
-                num_layers=NUM_LAYERS,
-                embedding_dim = EMB_DIM,
-                add_self_loops = False,
-                mu = MEAN_RATING,
-                model=MODEL,
-                device=device,
-                verbose=VERBOSE)
+
+model = models[MODEL](
+    num_users=NUM_USERS,
+    num_items=NUM_ITEMS,
+    num_layers=NUM_LAYERS,
+    embedding_dim=EMB_DIM,
+    add_self_loops=False,
+    mu=MEAN_RATING,
+    option=MODEL_OPTION,
+    device=device,
+    verbose=VERBOSE
+)
 
 
 if VERBOSE > -1:
@@ -286,7 +295,7 @@ for epoch in tqdm(range(EPOCHS), position=1, mininterval=1.0, ncols=100):
         avg_compute_time = "{:.4f}".format(round(all_compute_time/(epoch+1), 4)) 
 
 
-tqdm.write(f"\nModel: {br}{MODEL}{rs} | DATASET: {br}{DATASET}{rs} | Layers: {br}{NUM_LAYERS}{rs} | DECAY: {br}{DECAY}{rs}")
+tqdm.write(f"\Option: {br}{MODEL_OPTION}{rs} | DATASET: {br}{DATASET}{rs} | Layers: {br}{NUM_LAYERS}{rs} | DECAY: {br}{DECAY}{rs}")
 tqdm.write(f" Temp: {br}{A_METHOD}{rs} - {br}{A_BETA}{rs} | {br}{R_METHOD}{rs} - {br}{R_BETA}{rs}")
 tqdm.write(f" RMSE: {br}{min_RMSE_loss} at epoch {min_RMSE_epoch}{rs} with Recall, Precision: {br}{min_RECALL_f, min_PRECISION_f}{rs} | NCDG: {br}{min_ncdg}{rs}")
 #plot_loss(val_epochs, train_losses, val_losses, train_rmse, val_rmse, val_recall, val_prec)

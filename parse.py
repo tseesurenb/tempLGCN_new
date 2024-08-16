@@ -7,7 +7,8 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="tempLGCN", description="Dynamic GCN-based CF recommender")
-    parser.add_argument('--model', type=str, default='lgcn_b_ar', help='rec-model, support [lgcn, lgcn_b, lgcn_b_a, lgcn_b_r, lgcn_b_ar]')
+    parser.add_argument('--model', type=str, default='tempLGCN', help='rec-model, support [tempLGCN, LightGCN, MCCF]')
+    parser.add_argument('--option', type=str, default='lgcn_b_ar', help='rec-model, support [lgcn, lgcn_b, lgcn_b_a, lgcn_b_r, lgcn_b_ar]')
     parser.add_argument('--dataset', type=str, default='ml-100k', help="available datasets: [ml100k, ml1m, ml10m, yelp, douban, amazon]")
     parser.add_argument('--seed', type=int, default=42, help='random seed')
     parser.add_argument('--emb_dim', type=int, default=64, help="the embedding size for learning parameters")
