@@ -390,7 +390,7 @@ def add_u_rel_decay(rating_df, beta = 25, win_size = 1, method = 'exp', verbose 
     rating_df = pd.merge(rating_df, max_timestamp_per_user, on='userId')
     
     # Step 6: Calculate the time distance for each userId
-    rating_df['time_distance'] = (rating_df['max_timestamp'] - rating_df['min_timestamp']) / 86400
+    rating_df['time_distance'] = (rating_df['max_timestamp'] - rating_df['min_timestamp']) #/ 86400
 
     # Step 4: Calculate the 'u_rel_decay' column
     if method == 'lin':

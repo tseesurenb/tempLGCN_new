@@ -349,7 +349,10 @@ class tempLGCN(MessagePassing):
             u_emb_0 = u_emb_0 + self._u_base_emb.weight
             
         #i_emb_0 = self.items_emb.weight + self._i_base_emb.weight
-        i_emb_0 = self.items_emb.weight 
+        i_emb_0 = self.items_emb.weight
+        
+        #if self.item_baseline:
+        #    i_emb_0 = i_emb_0 + self._i_base_emb.weight
         
         emb_0 = torch.cat([u_emb_0, i_emb_0])
         embs = [emb_0]
@@ -401,7 +404,7 @@ class tempLGCN(MessagePassing):
         
         if self.option != 'lgcn': 
             _inner_pro = _inner_pro + self.mu
-            ratings = self.f(_inner_pro)
+            ratings = self.f(_inner_pro) 
         else:
             ratings = _inner_pro
         
@@ -412,6 +415,95 @@ class tempLGCN(MessagePassing):
         out =  x_j * norm.view(-1, 1)
                 
         return out
+    
+class tempLGCN2(MessagePassing):    
+    def __init__(self, 
+                 option,
+                 num_users,
+                 num_items,
+                 embedding_dim=64,
+                 num_layers=3,
+                 add_self_loops = False,
+                 mu = 0,
+                 drop= 0,
+                 device = 'cpu',
+                 verbose = False):
+        super().__init__()
+        self.num_users = num_users
+        self.num_items = num_items
+        self.embedding_dim = embedding_dim
+        self.num_layers = num_layers
+        self.add_self_loops = add_self_loops
+        self.edge_index_norm = None
+        self.verbose = verbose
+        self.mu = mu
+        self.option = option
+        self.dropout = drop
+        self.device = device
+        
+        print("Model: tempLGCN2, | Option:", option, " | Layers:", num_layers, " | emb dimension:", embedding_dim, " | dropout:", drop)
+        
+        self.users_emb = nn.Embedding(num_embeddings=self.num_users, embedding_dim=self.embedding_dim).to(self.device)
+        self.items_emb = nn.Embedding(num_embeddings=self.num_items, embedding_dim=self.embedding_dim).to(self.device)
+        
+        self.users_emb.weight.requires_grad = True
+        self.items_emb.weight.requires_grad = True
+        
+        nn.init.normal_(self.users_emb.weight, std=0.1)
+        nn.init.normal_(self.items_emb.weight, std=0.1)
+        
+        self.f = nn.ReLU()
+              
+    def forward(self, edge_index: Tensor, src: Tensor, dest: Tensor, u_abs_decay: Tensor, u_rel_decay: Tensor, i_rel_decay: Tensor):
+        
+        if(self.edge_index_norm is None):
+            self.edge_index_norm = gcn_norm(edge_index=edge_index, add_self_loops=self.add_self_loops)
+                  
+        #u_emb_0 = self.users_emb.weight + self._u_abs_drift_emb.weight + self._u_rel_drift_emb.weight + self._u_base_emb.weight
+        u_emb_0 = self.users_emb.weight
+        i_emb_0 = self.items_emb.weight
+        
+        emb_0 = torch.cat([u_emb_0, i_emb_0])
+        embs = [emb_0]
+        emb_k = emb_0
+        
+        #if(self.edge_index_norm is None):
+        #    # Compute normalization
+        #    from_, to_ = edge_index
+        #    deg = degree(to_, self.num_users + self.num_items, dtype=emb_k.dtype)
+        #    deg_inv_sqrt = deg.pow(-0.5)
+        #    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+        #    self.edge_index_norm = deg_inv_sqrt[from_] * deg_inv_sqrt[to_]
+    
+        for i in range(self.num_layers):
+            emb_k = self.propagate(edge_index=self.edge_index_norm[0], x=emb_k, norm=self.edge_index_norm[1])
+            embs.append(emb_k)
+             
+        embs = torch.stack(embs, dim=1)
+        emb_final = torch.mean(embs, dim=1)          
+        users_emb_final, items_emb_final = torch.split(emb_final, [self.num_users, self.num_items])
+        
+        self.users_emb_final = users_emb_final
+        self.items_emb_final = items_emb_final
+        
+        user_embeds = users_emb_final[src] * u_abs_decay.unsqueeze(1)* u_rel_decay.unsqueeze(1)
+        item_embeds = items_emb_final[dest]
+        
+        _inner_pro = torch.mul(user_embeds, item_embeds)
+        
+        _inner_pro = torch.sum(_inner_pro, dim=-1)
+          
+        ratings = _inner_pro
+        
+        #ratings = self.f(_inner_pro)       
+        
+        return ratings
+    
+    def message(self, x_j, norm):
+        out =  x_j * norm.view(-1, 1)
+                
+        return out
+    
     
 # pred = u_b * i_b + (u_abs * u_abs_t_decay)*(i_abs*i_abs_t_decay) + u_rel * u_rel_t_decay + mu
 class LGCN_full(MessagePassing):    
