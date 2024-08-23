@@ -17,7 +17,7 @@ from torch import nn, optim
 import time
 from tqdm import tqdm
 import data_prep as dp
-from model import LGCN_full, tempLGCN, MCCF, tempLGCN2
+from model import LGCN_full, tempLGCN, MCCF, tempLGCN2, NGCF
 
 # ANSI escape codes for bold and red
 br = "\033[1;31m"
@@ -29,7 +29,8 @@ rs = "\033[0m"
 models = {
     'tempLGCN': tempLGCN,
     'tempLGCN2': tempLGCN2,
-    'MCCF': MCCF
+    'MCCF': MCCF,
+    'NGCF': NGCF
 }
 
 def get_recall_at_k(input_edge_index,

@@ -233,6 +233,114 @@ class MCCF(MessagePassing):
         self.users_emb_final = checkpoint['users_emb_final']
         self.items_emb_final = checkpoint['items_emb_final']
         
+class NGCF(MessagePassing):    
+    def __init__(self, 
+                 option,
+                 num_users,
+                 num_items,
+                 embedding_dim=64,
+                 num_layers=3,
+                 add_self_loops = False,
+                 mu = 0,
+                 drop= 0.1,
+                 device = 'cpu',
+                 verbose = False):
+        super().__init__()
+        self.num_users = num_users
+        self.num_items = num_items
+        self.embedding_dim = embedding_dim
+        self.num_layers = num_layers
+        self.add_self_loops = add_self_loops
+        self.edge_index_norm = None
+        self.verbose = verbose
+        self.mu = mu
+        self.option = option
+        self.dropout = drop
+        self.device = device
+        self.bias = True
+        
+        print("Model: NCGF, | Option:", option, " | Layers:", num_layers, " | emb dimension:", embedding_dim, " | dropout:", drop)
+        
+        self.users_emb_final = None
+        self.items_emb_final = None
+        
+        self.users_emb = nn.Embedding(num_embeddings=self.num_users, embedding_dim=self.embedding_dim).to(self.device)
+        self.items_emb = nn.Embedding(num_embeddings=self.num_items, embedding_dim=self.embedding_dim).to(self.device)
+        
+        self.users_emb.weight.requires_grad = True
+        self.items_emb.weight.requires_grad = True
+        
+        self.lin_1 = nn.Linear(self.embedding_dim, self.embedding_dim, bias=self.bias)
+        self.lin_2 = nn.Linear(self.embedding_dim, self.embedding_dim, bias=self.bias)
+        
+        self.lin_1.weight.requires_grad = True
+        self.lin_2.weight.requires_grad = True
+        
+        self.init_parameters()
+        
+        torch.autograd.set_detect_anomaly(True)
+                
+        self.f = nn.ReLU()
+    
+    def init_parameters(self):
+        nn.init.xavier_uniform_(self.items_emb.weight, gain=1)
+        nn.init.xavier_uniform_(self.users_emb.weight, gain=1)
+        
+        nn.init.xavier_uniform_(self.lin_1.weight)
+        nn.init.xavier_uniform_(self.lin_2.weight)
+              
+    def forward(self, edge_index: Tensor, src: Tensor, dest: Tensor, u_abs_decay: Tensor, u_rel_decay: Tensor, i_rel_decay: Tensor):
+        
+        if(self.edge_index_norm is None):
+            self.edge_index_norm = gcn_norm(edge_index=edge_index, add_self_loops=self.add_self_loops)
+                  
+        #u_emb_0 = self.users_emb.weight + self._u_abs_drift_emb.weight + self._u_rel_drift_emb.weight + self._u_base_emb.weight
+        u_emb_0 = self.users_emb.weight
+        i_emb_0 = self.items_emb.weight
+        
+        emb_0 = torch.cat([u_emb_0, i_emb_0])
+        embs = [emb_0]
+        emb_k = emb_0
+        
+        #if(self.edge_index_norm is None):
+        #    # Compute normalization
+        #    from_, to_ = edge_index
+        #    deg = degree(to_, self.num_users + self.num_items, dtype=emb_k.dtype)
+        #    deg_inv_sqrt = deg.pow(-0.5)
+        #    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+        #    self.edge_index_norm = deg_inv_sqrt[from_] * deg_inv_sqrt[to_]
+    
+        for i in range(self.num_layers):
+            emb_k = self.propagate(edge_index=self.edge_index_norm[0], x=(emb_k, emb_k) , norm=self.edge_index_norm[1])
+            emb_k = emb_k + self.lin_1(emb_k)
+            emb_k = F.dropout(emb_k, self.dropout, self.training)
+            emb_k = F.leaky_relu(emb_k)
+            embs.append(emb_k)
+             
+        #embs = torch.stack(embs, dim=1)
+        emb_final = torch.cat(embs, dim=-1)          
+        users_emb_final, items_emb_final = torch.split(emb_final, [self.num_users, self.num_items])
+        
+        self.users_emb_final = users_emb_final
+        self.items_emb_final = items_emb_final
+        
+        user_embeds = users_emb_final[src]
+        item_embeds = items_emb_final[dest]
+        
+        _inner_pro = torch.mul(user_embeds, item_embeds)
+                 
+        _inner_pro = torch.sum(_inner_pro, dim=-1)
+        
+        ratings = _inner_pro
+        
+        #ratings = self.f(_inner_pro)       
+        return ratings
+    
+    def message(self, x_j, x_i, norm):
+        out =  norm.view(-1, 1) * (self.lin_1(x_j) + self.lin_2(x_j * x_i))
+                
+        return out
+        
 class tempLGCN(MessagePassing):    
     def __init__(self, 
                  option,
