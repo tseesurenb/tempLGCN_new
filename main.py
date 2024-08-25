@@ -67,7 +67,7 @@ for seed in seeds:
 
     exp_n += 1
 
-print(f"\nModel: {br}{MODEL}{rs} | Option: {br}{MODEL_OPTION}{rs} | Dataset: {br}{DATASET}{rs} | Layers: {br}{NUM_LAYERS}{rs} | Decay: {br}{DECAY}{rs}")
+print(f"\nModel: {br}{MODEL}{rs} | Option: {br}{MODEL_OPTION}{rs} | Dataset: {br}{DATASET}{rs} | Layers: {br}{NUM_LAYERS}{rs} | Decay: {br}{DECAY}{rs} | Batch: {br}{config['batch_size']}{rs}")
 print(f" Temp: {br}{A_METHOD}{rs} - {br}{A_BETA}{rs} | {br}{R_METHOD}{rs} - {br}{R_BETA}{rs}")
 
 
