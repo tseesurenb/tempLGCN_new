@@ -47,7 +47,7 @@ df = dp.add_i_rel_decay(df, method=R_METHOD, beta=R_BETA, verbose=VERBOSE)
 # STEP 3: getting the interaction matrix values
 rmat_data = dp.get_rmat_values(df, verbose=VERBOSE)
  
-seeds = [3, 12, 89, 91, 41]
+seeds = [7, 12, 89, 91, 41]
 
 rmses, recalls, precs, ncdgs_5, ncdgs_10, ncdgs_15, ncdgs_20 = [], [], [], [], [], [], []
 
