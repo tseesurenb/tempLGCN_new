@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument('--r_method', type=str, default='exp')
     parser.add_argument('--r_beta', type=float, default=25)
     parser.add_argument('--a_beta', type=float, default=0.055)
-    parser.add_argument('--a_method', type=str, default='log')
+    parser.add_argument('--a_method', type=str, default='log') # 'log' or 'exp'
     parser.add_argument('--by_time', type=bool, default=False)
     parser.add_argument('--loadedModel', type=bool, default=False)
     parser.add_argument('--drop', type=float, default=0.0)
